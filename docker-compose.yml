@@ -1,9 +1,7 @@
-# SquidWardDevs-OL11/docker-compose.yml
-
 version: '3.8'
 
 services:
-  # 1. The FastAPI Backend
+  # 1. The FastAPI Backend (Merged and Updated)
   backend:
     build: ./backend
     ports:
@@ -12,8 +10,10 @@ services:
       - ./backend:/app  # Maps local files to container so code updates live
     environment:
       - DATABASE_URL=postgresql://postgres:password@db:5432/clinical_db
+      - REDIS_URL=redis://redis:6379/0  # Added Redis connection
     depends_on:
       - db
+      - redis  # Added Redis dependency
 
   # 2. The React/Vite Frontend
   frontend:
@@ -22,13 +22,20 @@ services:
       - "5173:5173"
     volumes:
       - ./frontend:/app
-      - /app/node_modules # Prevents local node_modules from conflicting with container's
+      - /app/node_modules # Prevents local node_modules from conflicting
     environment:
       - VITE_API_URL=http://localhost:8000 # Tells React where the backend is
     depends_on:
       - backend
 
-  # 3. The PostgreSQL Database
+  # 3. The Redis Message Broker (The Radio Tower)
+  redis:
+    image: redis:7-alpine
+    container_name: squidwarddevs-ol11-redis
+    ports:
+      - "6379:6379"
+
+  # 4. The PostgreSQL Database
   db:
     image: postgres:15-alpine
     environment:
@@ -38,7 +45,7 @@ services:
     ports:
       - "5436:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data # Makes DB data persistent across restarts
+      - postgres_data:/var/lib/postgresql/data # Persistent storage
 
 # Define the named volume for the database
 volumes:
