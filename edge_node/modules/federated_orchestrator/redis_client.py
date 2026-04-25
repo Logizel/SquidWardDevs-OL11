@@ -37,28 +37,33 @@ async def listen_to_hub():
         print(f"❌ Redis Connection Error: {e}")
 
 async def process_trial_locally(redis_client, trial_id: str, criteria_list: list):
-    """Translates criteria via AI, queries local DB, and returns private count."""
+    """Translates criteria, queries local DB, enforces K-Anonymity, and returns private count."""
     db = SessionLocal()
     try:
-        # 1. Use the Deterministic AST Parser (No LLM, 0% Hallucination)
+        # 1. Ask the AI (or AST Parser) to translate criteria into SQL
         sql_query = generate_sql_from_criteria({"criteria": criteria_list})
-        print(f"⚙️ Deterministic SQL Generated: {sql_query}")
+        print(f"⚙️ Generated SQL: {sql_query}")
         
         # 2. Execute locally against hospital EHR
         result = db.execute(text(sql_query)).fetchone()
         true_count = result[0] if result else 0
         
-        # --- NEW: K-ANONYMITY THRESHOLD ---
-        # Prevents "Differencing Attacks" to single out rare diseases or specific people
+        # ==========================================
+        # 🛡️ THE K-ANONYMITY SHIELD (NEW CODE)
+        # ==========================================
+        # If the number of matching patients is too small (e.g., between 1 and 4),
+        # it is too easy for a sponsor to figure out exactly WHO those people are.
         if 0 < true_count < 5:
-            print(f"🛡️ K-Anonymity Triggered: Cohort of {true_count} is too small. Dropping to 0 to protect patient identities.")
-            true_count = 0
-            
+            print(f"🚨 K-ANONYMITY TRIGGERED: {true_count} patients found. This is below the minimum threshold of 5.")
+            print(f"🛡️ Dropping count to 0 to prevent Differencing Attacks and protect identities.")
+            true_count = 0  # Force it to zero!
+        # ==========================================
+        
         # 3. Cryptography & Privacy Math
         execution_proof = generate_execution_proof(sql_query, true_count)
         fuzzed_count = apply_laplace_noise(true_count, epsilon=0.5)
         
-        # 4. Construct the exact response the Hub is waiting for
+        # 4. Construct response payload
         response_payload = {
             "trial_id": trial_id,
             "hospital_name": settings.HOSPITAL_NAME,
