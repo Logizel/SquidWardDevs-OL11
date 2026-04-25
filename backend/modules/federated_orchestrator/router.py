@@ -23,12 +23,14 @@ async def websocket_endpoint(websocket: WebSocket, trial_id: str):
 @router.post("/trials/{trial_id}/broadcast")
 async def trigger_broadcast(trial_id: str, db: Session = Depends(get_db)):
     """Sponsor clicks 'Find Patients' and hits this endpoint."""
-    # 1. Fetch the trial and its criteria from PostgreSQL
+    
+    # 1. Fetch the real trial and its criteria from PostgreSQL
     trial = db.query(Trial).filter(Trial.id == trial_id).first()
     if not trial:
         raise HTTPException(status_code=404, detail="Trial not found")
 
-    # 2. Broadcast it to the Edge Nodes via Redis
+    # 2. Broadcast the real criteria to the Edge Nodes via Redis
+    from modules.federated_orchestrator.redis_client import publish_trial_to_edge
     await publish_trial_to_edge(str(trial.id), trial.criteria)
 
     return {

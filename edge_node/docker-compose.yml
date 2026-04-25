@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  edge_api:
+    build: .
+    container_name: edge_api_node
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app  
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@edge_db:5432/hospital_local_db
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      # This tells the container to look at the host laptop's port 6379
+      - REDIS_URL=redis://host.docker.internal:6379/0  
+      - PYTHONUNBUFFERED=1
+    # This is required for Linux/WSL to understand "host.docker.internal"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - edge_db
+
+  edge_db:
+    image: postgres:15-alpine
+    container_name: edge_postgres_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: hospital_local_db
+    ports:
+      - "5437:5432" 
+    volumes:
+      - edge_pg_data:/var/lib/postgresql/data
+
+volumes:
+  edge_pg_data:

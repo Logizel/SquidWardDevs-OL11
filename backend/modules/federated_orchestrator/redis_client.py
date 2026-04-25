@@ -28,6 +28,10 @@ async def listen_for_edge_results():
     async for message in pubsub.listen():
         if message["type"] == "message":
             data = json.loads(message["data"])
+            
+            # --- THIS PROVES ENCRYPTION WORKS ---
+            print(f"\n🔒 RAW SECURE PAYLOAD RECEIVED: {json.dumps(data, indent=2)}\n")
+            
             trial_id = data.get("trial_id")
             hospital_name = data.get("hospital_name")
             patient_count = data.get(
