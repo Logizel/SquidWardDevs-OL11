@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from database import engine, Base
 from models.user import User
+from fastapi.middleware.cors import CORSMiddleware
 from models.trial import Trial, TrialCriteria
 from models.negotiation import Negotiation
 
@@ -27,6 +28,17 @@ async def lifespan(app: FastAPI):
 
 # Initialize FastAPI with the lifespan
 app = FastAPI(title="Project Medora Hub", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],  # Your React frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],  # This allows POST, GET, OPTIONS, etc.
+    allow_headers=["*"],
+)
 
 # Register Routers
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])

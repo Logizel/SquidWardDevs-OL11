@@ -1,41 +1,39 @@
-const API_BASE = "http://localhost:8000";
+// src/api/auth.ts
+const API_BASE = "http://localhost:8000/api/v1/auth";
 
-// 🔐 LOGIN
-export const loginUser = async (email: string, password: string) => {
+export const registerUser = async (payload: any) => {
+  const response = await fetch(`${API_BASE}/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Registration failed");
+  }
+  return response.json();
+};
+
+export const loginUser = async (username: string, password: string) => {
+  // FastAPI OAuth2 expects form-urlencoded data
   const formData = new URLSearchParams();
-  formData.append("username", email);
+  formData.append("username", username);
   formData.append("password", password);
-  formData.append("grant_type", "password");
 
-  const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+  const response = await fetch(`${API_BASE}/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-      "Accept": "application/json",
     },
     body: formData,
   });
 
   if (!response.ok) {
-    throw new Error("Login failed");
+    const errorData = await response.json();
+    throw new Error(errorData.detail || "Login failed");
   }
-
-  return response.json();
-};
-
-// 👤 GET CURRENT USER
-export const getCurrentUser = async (token: string) => {
-  const response = await fetch(`${API_BASE}/api/v1/auth/me`, {
-    method: "GET",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Accept": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Invalid or expired token");
-  }
-
   return response.json();
 };
