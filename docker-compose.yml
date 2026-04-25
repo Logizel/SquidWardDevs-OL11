@@ -1,0 +1,45 @@
+# SquidWardDevs-OL11/docker-compose.yml
+
+version: '3.8'
+
+services:
+  # 1. The FastAPI Backend
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app  # Maps local files to container so code updates live
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/clinical_db
+    depends_on:
+      - db
+
+  # 2. The React/Vite Frontend
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Prevents local node_modules from conflicting with container's
+    environment:
+      - VITE_API_URL=http://localhost:8000 # Tells React where the backend is
+    depends_on:
+      - backend
+
+  # 3. The PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: clinical_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Makes DB data persistent across restarts
+
+# Define the named volume for the database
+volumes:
+  postgres_data:
