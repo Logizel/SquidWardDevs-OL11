@@ -14,3 +14,6 @@ psycopg2-binary>=2.9.9
 python-jose[cryptography]>=3.3.0
 passlib==1.7.4
 bcrypt==3.2.2
+
+redis>=5.0.0
+websockets>=12.0
