@@ -6,7 +6,7 @@ from config import settings
 from database import SessionLocal
 
 # Import our existing engines
-from modules.synthetic_data_engine.ollama_client import generate_sql_from_criteria
+from modules.synthetic_data_engine.ast_parser import generate_sql_from_criteria
 from modules.privacy_engine.differential_privacy import apply_laplace_noise
 from modules.privacy_engine.zkp import generate_execution_proof
 
@@ -40,14 +40,20 @@ async def process_trial_locally(redis_client, trial_id: str, criteria_list: list
     """Translates criteria via AI, queries local DB, and returns private count."""
     db = SessionLocal()
     try:
-        # 1. Ask OpenRouter to translate the complex criteria list into SQL
+        # 1. Use the Deterministic AST Parser (No LLM, 0% Hallucination)
         sql_query = generate_sql_from_criteria({"criteria": criteria_list})
-        print(f"🤖 AI Generated SQL: {sql_query}")
+        print(f"⚙️ Deterministic SQL Generated: {sql_query}")
         
         # 2. Execute locally against hospital EHR
         result = db.execute(text(sql_query)).fetchone()
         true_count = result[0] if result else 0
         
+        # --- NEW: K-ANONYMITY THRESHOLD ---
+        # Prevents "Differencing Attacks" to single out rare diseases or specific people
+        if 0 < true_count < 5:
+            print(f"🛡️ K-Anonymity Triggered: Cohort of {true_count} is too small. Dropping to 0 to protect patient identities.")
+            true_count = 0
+            
         # 3. Cryptography & Privacy Math
         execution_proof = generate_execution_proof(sql_query, true_count)
         fuzzed_count = apply_laplace_noise(true_count, epsilon=0.5)

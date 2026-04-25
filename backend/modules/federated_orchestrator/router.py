@@ -21,19 +21,24 @@ async def websocket_endpoint(websocket: WebSocket, trial_id: str):
 
 
 @router.post("/trials/{trial_id}/broadcast")
-async def trigger_broadcast(trial_id: str, db: Session = Depends(get_db)):
-    """Sponsor clicks 'Find Patients' and hits this endpoint."""
+async def trigger_broadcast(trial_id: str):
+    """TESTING BYPASS: Forces a message to Redis without checking the DB."""
+    import json
+    from modules.federated_orchestrator.redis_client import redis_client
     
-    # 1. Fetch the real trial and its criteria from PostgreSQL
-    trial = db.query(Trial).filter(Trial.id == trial_id).first()
-    if not trial:
-        raise HTTPException(status_code=404, detail="Trial not found")
-
-    # 2. Broadcast the real criteria to the Edge Nodes via Redis
-    from modules.federated_orchestrator.redis_client import publish_trial_to_edge
-    await publish_trial_to_edge(str(trial.id), trial.criteria)
+    # We use a hardcoded payload so we don't need to look up a real trial in the DB
+    dummy_payload = {
+        "trial_id": trial_id,
+        "criteria": [
+            {"min_age": 25, "gender": "Female", "required_conditions": ["E11"]},
+            {"forbidden_conditions": ["I50.1"]}
+        ]
+    }
+    
+    await redis_client.publish("edge_node_tasks", json.dumps(dummy_payload))
+    print("🚀 FORCED BROADCAST VIA REDIS")
 
     return {
         "status": "success",
-        "message": f"Trial {trial_id} broadcasted to Edge Nodes.",
+        "message": f"Forced broadcast of trial {trial_id} to Edge Nodes.",
     }
