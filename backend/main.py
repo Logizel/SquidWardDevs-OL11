@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from modules.auth_management.router import router as auth_router
 from database import engine, Base
 from models.user import User
+from models.trial import Trial, TrialCriteria
+from modules.trial_builder.router import router as trial_router
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -12,6 +14,7 @@ app = FastAPI(
 )
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(trial_router, prefix="/api/v1/trials", tags=["Trial Builder"])
 
 
 @app.get("/")
