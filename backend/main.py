@@ -6,6 +6,7 @@ from models.user import User
 from fastapi.middleware.cors import CORSMiddleware
 from models.trial import Trial, TrialCriteria
 from models.negotiation import Negotiation
+from modules.hospital.router import router as hospital_router
 
 # Import Routers
 from modules.auth_management.router import router as auth_router
@@ -13,6 +14,7 @@ from modules.trial_builder.router import router as trial_router
 from modules.federated_orchestrator.router import router as orchestrator_router
 from modules.federated_orchestrator.redis_client import listen_for_edge_results
 from modules.agent_negotiator.router import router as negotiator_router
+from models.audit import AuditLog
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -48,4 +50,7 @@ app.include_router(
 )
 app.include_router(
     negotiator_router, prefix="/api/v1/negotiate", tags=["AI Negotiator"]
+)
+app.include_router(
+    hospital_router, prefix="/api/v1/hospital", tags=["Hospital Dashboard"]
 )
