@@ -12,24 +12,33 @@ export default function Register() {
   // Role-specific fields
   const [corporateId, setCorporateId] = useState("");
   const [hospitalName, setHospitalName] = useState("");
+  const [nabhLicense, setNabhLicense] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Map to EXACT snake_case keys for FastAPI
+    // Note: 'hospital' is mapped to 'site_admin' per backend requirements
     const payload = {
       email,
       password,
       role,
-      ...(role === "sponsor" && { corporate_id_number: corporateId }),
-      ...(role === "hospital" && { hospital_name: hospitalName }),
+      ...(role === "sponsor" && { 
+        corporate_id_number: corporateId || "N/A" 
+      }),
+      ...(role === "site_admin" && { 
+        hospital_name: hospitalName,
+        nabh_license_number: nabhLicense || "N/A"
+      }),
     };
 
     try {
+      console.log("Sending Payload:", payload);
       await registerUser(payload);
       alert("Registration successful! Please wait for admin approval.");
       navigate("/login");
     } catch (error: any) {
-      alert("Error: " + error.message);
+      alert("FastAPI Rejected the Data:\n\n" + error.message);
     }
   };
 
@@ -51,7 +60,7 @@ export default function Register() {
           <label>Role: </label>
           <select value={role} onChange={e => setRole(e.target.value)}>
             <option value="sponsor">Sponsor</option>
-            <option value="hospital">Hospital</option>
+            <option value="site_admin">Hospital</option>
           </select>
         </div>
         <br />
@@ -63,11 +72,18 @@ export default function Register() {
           </div>
         )}
 
-        {role === "hospital" && (
-          <div>
-            <label>Hospital Name: </label>
-            <input type="text" value={hospitalName} onChange={e => setHospitalName(e.target.value)} required />
-          </div>
+        {role === "site_admin" && (
+          <>
+            <div>
+              <label>Hospital Name: </label>
+              <input type="text" value={hospitalName} onChange={e => setHospitalName(e.target.value)} required />
+            </div>
+            <br />
+            <div>
+              <label>NABH License Number: </label>
+              <input type="text" value={nabhLicense} onChange={e => setNabhLicense(e.target.value)} required />
+            </div>
+          </>
         )}
         <br />
         

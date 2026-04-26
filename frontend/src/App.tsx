@@ -3,7 +3,8 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Login from "./components/Login";
 import Register from "./components/Register";
-import TrialBuilder from "./components/TrialBuilder"; // 👈 NEW IMPORT
+import TrialBuilder from "./components/TrialBuilder";
+import HospitalDashboard from "./components/HospitalDashboard";
 
 export default function App() {
   return (
@@ -11,7 +12,7 @@ export default function App() {
       <div>
         <h1>Medora Hub Frontend (Raw)</h1>
         <nav>
-          <Link to="/login">Login</Link> | <Link to="/register">Register</Link> | <Link to="/trial-builder">Sponsor Dashboard</Link>
+          <Link to="/login">Login</Link> | <Link to="/register">Register</Link> | <Link to="/trial-builder">Sponsor</Link> | <Link to="/hospital-dashboard">Hospital</Link>
         </nav>
         <hr />
         
@@ -19,7 +20,8 @@ export default function App() {
           <Route path="/" element={<h3>Welcome Home. Please navigate to Login or Register.</h3>} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/trial-builder" element={<TrialBuilder />} /> {/* 👈 NEW ROUTE */}
+          <Route path="/trial-builder" element={<TrialBuilder />} />
+          <Route path="/hospital-dashboard" element={<HospitalDashboard />} /> {/* 👈 NEW ROUTE */}
         </Routes>
       </div>
     </BrowserRouter>

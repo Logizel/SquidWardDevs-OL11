@@ -12,7 +12,9 @@ export const registerUser = async (payload: any) => {
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.detail || "Registration failed");
+    // 👇 THE CHEAT CODE: Print the exact backend error to the console
+    console.error("🚨 FASTAPI REJECTION:", JSON.stringify(errorData, null, 2));
+    throw new Error(JSON.stringify(errorData));
   }
   return response.json();
 };
@@ -34,6 +36,21 @@ export const loginUser = async (username: string, password: string) => {
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.detail || "Login failed");
+  }
+  return response.json();
+};
+
+export const getCurrentUser = async (token: string) => {
+  const response = await fetch(`${API_BASE}/me`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Accept": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch user details");
   }
   return response.json();
 };
