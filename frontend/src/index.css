@@ -1,4 +1,9 @@
 /* ===== THEME ===== */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
 @theme {
   --font-sans: "Inter", system-ui, sans-serif;
 }
